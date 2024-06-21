@@ -4,20 +4,23 @@ import (
 	"io"
 )
 
-// Rot128Reader implements io.Reader that transforms
-type Rot128Reader struct{ reader io.Reader }
+type Rot128Reader struct {
+	reader io.Reader
+}
 
 func NewRot128Reader(r io.Reader) (*Rot128Reader, error) {
 	return &Rot128Reader{reader: r}, nil
 }
 
 func (r *Rot128Reader) Read(p []byte) (int, error) {
-	if n, err := r.reader.Read(p); err != nil {
+	n, err := r.reader.Read(p)
+	if err != nil {
 		return n, err
-	} else {
-		rot128(p[:n])
-		return n, nil
 	}
+	for i := range p[:n] {
+		p[i] -= 128
+	}
+	return n, nil
 }
 
 type Rot128Writer struct {
@@ -28,7 +31,7 @@ type Rot128Writer struct {
 func NewRot128Writer(w io.Writer) (*Rot128Writer, error) {
 	return &Rot128Writer{
 		writer: w,
-		buffer: make([]byte, 4096, 4096),
+		buffer: make([]byte, 4096),
 	}, nil
 }
 
